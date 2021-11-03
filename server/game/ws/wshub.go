@@ -2,7 +2,6 @@ package ws
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/giongto35/gowog/server/game/gameconst"
@@ -66,7 +65,6 @@ func (h *hubImpl) BindGameMaster(game IGame) {
 }
 
 func (h *hubImpl) Run() {
-	log.Println("Hub is running")
 	for {
 		select {
 		case register := <-h.register:
@@ -77,7 +75,6 @@ func (h *hubImpl) Run() {
 
 		case client := <-h.unregister:
 			// TODO: BUG HERE, deadlock
-			log.Println("Close client ", client.GetID())
 			h.game.RemovePlayerByClientID(client.GetID())
 			// Remove client from existed list, so the remoteAddr can be reused again
 			for k, v := range h.exist {
@@ -86,40 +83,31 @@ func (h *hubImpl) Run() {
 				}
 			}
 
-			log.Println("Close client done", client.GetID())
 			// send to game event stream
 			delete(h.clients, client.GetID())
 			client.Close()
 
 		case serverMessage := <-h.broadcastMsgStream:
 			// Broadcast message exclude serverMessage.clientID
-			log.Println("Hub Broadcast message ")
 			excludeID := serverMessage.excludeID
 			for id, client := range h.clients {
 				if id == excludeID {
 					continue
 				}
-				log.Println("   to ", id)
 				select {
 				case client.GetSend() <- serverMessage.msg:
 				default:
 					//Handle this case properly , causing deadlock
-					log.Println("Sended to close channel", id)
 					//client.Close()
 				}
 			}
-			log.Println("Hub Broadcast message done")
 
 		case serverMessage := <-h.singleMsgStream:
 			// Sending single message exclude serverMessage.clientID
-			log.Println("Sending single message to ", serverMessage.clientID)
 			if client, ok := h.clients[serverMessage.clientID]; ok {
-				fmt.Println("NUM CLIENTS", len(h.clients))
 				client.GetSend() <- serverMessage.msg
 			}
-			log.Println("Sending single message to ", serverMessage.clientID, " done")
 		}
-		log.Println("HUB DONE")
 	}
 }
 
@@ -171,7 +159,5 @@ func (h *hubImpl) BroadcastExclude(b []byte, excludeID int32) {
 }
 
 func (h *hubImpl) broadcast(b []byte, excludeID int32) {
-	log.Println("Hub broadcasting message ", len(h.broadcastMsgStream))
 	h.broadcastMsgStream <- broadcastMessage{excludeID: excludeID, msg: b}
-	log.Println("Hub broadcasting done")
 }

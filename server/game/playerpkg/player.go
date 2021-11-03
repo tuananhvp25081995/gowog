@@ -19,19 +19,19 @@ type PlayerImpl struct {
 	clientID int32
 }
 
-var dirX = map[Message_proto.Direction]float32{
-	Message_proto.Direction_UP:    0,
-	Message_proto.Direction_DOWN:  0,
-	Message_proto.Direction_LEFT:  -1,
-	Message_proto.Direction_RIGHT: 1,
-}
+// var dirX = map[Message_proto.Direction]float32{
+// 	Message_proto.Direction_UP:    0,
+// 	Message_proto.Direction_DOWN:  0,
+// 	Message_proto.Direction_LEFT:  -1,
+// 	Message_proto.Direction_RIGHT: 1,
+// }
 
-var dirY = map[Message_proto.Direction]float32{
-	Message_proto.Direction_UP:    -1,
-	Message_proto.Direction_DOWN:  1,
-	Message_proto.Direction_LEFT:  0,
-	Message_proto.Direction_RIGHT: 0,
-}
+// var dirY = map[Message_proto.Direction]float32{
+// 	Message_proto.Direction_UP:    -1,
+// 	Message_proto.Direction_DOWN:  1,
+// 	Message_proto.Direction_LEFT:  0,
+// 	Message_proto.Direction_RIGHT: 0,
+// }
 
 // NewPlayer returns new player
 func NewPlayer(playerID int32, clientID int32, name string) Player {

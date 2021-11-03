@@ -1,7 +1,6 @@
 package objmanager
 
 import (
-	"log"
 	"math"
 	"time"
 
@@ -55,7 +54,6 @@ func (m *objManager) RegisterPlayer(clientID int32, name string) playerpkg.Playe
 	m.players[playerID] = tempPlayer
 	player := m.players[playerID]
 	player.SetEnable(true)
-	log.Println("Register player", player.GetPlayerProto().GetId(), player.GetName())
 
 	return player
 }
@@ -147,13 +145,11 @@ func (m *objManager) Update() {
 		// Check if bullet hits players
 		for _, player := range m.players {
 			if shoot.GetPlayerID() != player.GetID() && m.isShootHitPlayer(curShootPosition, player) {
-				log.Println("Shoot ", shoot.GetID(), " from player ", shoot.GetPlayerID(), " Hit Player", player.GetID())
 				player.SetHealth(player.GetHealth() - 10)
 				// Remove shoot
 				m.RemoveShoot(shoot)
 				// Remove player if health is under 0
 				if player.GetHealth() <= 0 {
-					log.Println("Push remove Player Event to event stream")
 					// TODO: Removeplayer here, don't need push to event stream
 					m.game.RemovePlayer(player.GetID(), -1)
 					// Add score for player who shoots
@@ -170,7 +166,6 @@ func (m *objManager) Update() {
 			if m.isShootHitWall(curShootPosition, block) {
 				// Remove shoot
 				m.RemoveShoot(shoot)
-				log.Println("Remove shoot", shoot)
 				return
 			}
 		}

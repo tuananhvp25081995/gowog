@@ -48,12 +48,10 @@ type clientImpl struct {
 // reads from this goroutine.
 func (c *clientImpl) ReadPump() {
 	defer func() {
-		log.Println("Close readpump", c.GetID())
 		c.hub.UnRegister(c)
 		c.conn.Close()
 	}()
 	for {
-		log.Println("Waiting for message")
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			// Client disconnect

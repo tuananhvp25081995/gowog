@@ -5,9 +5,7 @@ package game
 
 import (
 	"fmt"
-	"log"
 	"math"
-	"runtime"
 	"time"
 
 	"github.com/giongto35/gowog/server/game/common"
@@ -58,33 +56,23 @@ func (g *gameImpl) gameUpdate() (quit chan bool) {
 	quit = make(chan bool)
 	go func() {
 		for {
-			log.Println("GAME PROCESS")
 			select {
 			case v := <-g.destroyPlayerStream:
-				log.Println("Remove player", v)
 				g.removePlayer(v.PlayerID, v.ClientID)
-				log.Println("Remove player done", v)
 
 			case v := <-g.newPlayerStream:
-				log.Println("New player with clientID", v)
 				g.newPlayerConnect(v.Client)
-				log.Println("New player with clientID done", v)
 
 			case v := <-g.inputStream:
-				log.Println("Processs Message", v)
 				g.processInput(v.Message)
-				log.Println("Processs Message done", v)
 
 			case <-ticker.C:
-				log.Println("Update")
 				g.Update()
-				log.Println("Update done")
 
 			case <-quit:
 				ticker.Stop()
 				return
 			}
-			log.Println("GAME PROCESS DONE")
 		}
 	}()
 
@@ -93,15 +81,12 @@ func (g *gameImpl) gameUpdate() (quit chan bool) {
 
 // Update update all objects in each server ticks
 func (g *gameImpl) Update() {
-	log.Printf("#goroutines: %d\n", runtime.NumGoroutine())
 
 	// Update all object logic
 	g.objManager.Update()
 
-	log.Println("Game send update ")
 	// Send to all clients the updated environment
 	for _, player := range g.objManager.GetPlayers() {
-		log.Println("Update Player ", player.GetPlayerProto())
 		updatePlayerMsg := &Message_proto.ServerGameMessage{
 			Message: &Message_proto.ServerGameMessage_UpdatePlayerPayload{
 				UpdatePlayerPayload: player.GetPlayerProto(),
@@ -109,9 +94,7 @@ func (g *gameImpl) Update() {
 		}
 		encodedMsg, _ := proto.Marshal(updatePlayerMsg)
 		g.hub.Broadcast(encodedMsg)
-		log.Println("Update Player done", player.GetPlayerProto())
 	}
-	log.Println("Game send update done")
 }
 
 // Checking rect circle collision givent the shape
@@ -140,26 +123,22 @@ func (g *gameImpl) ProcessInput(message []byte) {
 
 // ProcessInput logic to process ProcessInputEvent messsage
 func (g *gameImpl) processInput(message []byte) {
-	log.Printf("recv: %s", message)
 	msg := &Message_proto.ClientGameMessage{}
 	_ = proto.Unmarshal(message, msg)
-
 	// Process different type of message received from client
 	switch msg.Message.(type) {
 	case *Message_proto.ClientGameMessage_MovePositionPayload:
-		log.Println("Received Move Message", msg)
+		fmt.Println("2", msg.GetMovePositionPayload().GetDx())
 		// Move player game logic
 		player, ok := g.objManager.GetPlayerByID(msg.GetMovePositionPayload().GetId())
 		if !ok {
 			break
 		}
-
 		g.objManager.MovePlayer(player, msg.GetMovePositionPayload().GetDx(), msg.GetMovePositionPayload().GetDy(), gameconst.PlayerSpeed, msg.GetTimeElapsed())
 		// Update sequence number
 		player.SetCurrentInputNumber(msg.InputSequenceNumber)
 
 	case *Message_proto.ClientGameMessage_ShootPayload:
-		log.Println("Received Shoot Message", msg.GetShootPayload())
 		player, ok := g.objManager.GetPlayerByID(msg.GetShootPayload().GetPlayerId())
 		if !ok {
 			break
@@ -172,11 +151,9 @@ func (g *gameImpl) processInput(message []byte) {
 		g.sendShootMsg(shoot)
 
 	case *Message_proto.ClientGameMessage_InitPlayerPayload:
-		log.Println("Received Init Player Message", msg.GetInitPlayerPayload())
 		g.initPlayer(msg.GetInitPlayerPayload().GetClientId(), msg.GetInitPlayerPayload().GetName())
 
 	case *Message_proto.ClientGameMessage_SetPositionPayload:
-		log.Println("Received Set Position Message", msg)
 		// Set position player game logic
 		player, ok := g.objManager.GetPlayerByID(msg.GetSetPositionPayload().GetId())
 		if !ok {
@@ -232,7 +209,6 @@ func (g *gameImpl) newPlayerConnect(client ws.Client) {
 	// Send all current players info to new player
 	initAllMsg := g.createInitAllMessage(g.objManager.GetPlayers(), g.objManager.GetMap())
 	encodedMsg, _ := proto.Marshal(initAllMsg)
-	log.Println(1, clientID)
 	// TODO: Hub might not finish registering client
 	g.hub.Send(clientID, encodedMsg)
 
@@ -245,9 +221,7 @@ func (g *gameImpl) newPlayerConnect(client ws.Client) {
 		},
 	}
 	encodedMsg, _ = proto.Marshal(registerClientIDMsg)
-	log.Println(2, clientID)
 	g.hub.Send(clientID, encodedMsg)
-	log.Println("Done send 2")
 }
 
 // sendShootMsg send shoot event to all clients
@@ -311,9 +285,7 @@ func (g *gameImpl) removePlayer(playerID int32, clientID int32) {
 		},
 	}
 	encodedMsg, _ := proto.Marshal(removePlayerMsg)
-	log.Println("Send Remove Player Message ", removePlayerMsg)
 	g.hub.Broadcast(encodedMsg)
-	log.Println("Send Remove Player Message Done")
 }
 
 //  removePlayer remove player logic from game using player ID
