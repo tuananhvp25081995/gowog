@@ -57,8 +57,8 @@ func (g *gameImpl) gameUpdate() (quit chan bool) {
 	go func() {
 		for {
 			select {
-			case v := <-g.destroyPlayerStream:
-				g.removePlayer(v.PlayerID, v.ClientID)
+			// case v := <-g.destroyPlayerStream:
+			// 	g.removePlayer(v.PlayerID, v.ClientID)
 
 			case v := <-g.newPlayerStream:
 				g.newPlayerConnect(v.Client)
@@ -66,8 +66,8 @@ func (g *gameImpl) gameUpdate() (quit chan bool) {
 			case v := <-g.inputStream:
 				g.processInput(v.Message)
 
-			case <-ticker.C:
-				g.Update()
+			// case <-ticker.C:
+			// 	g.Update()
 
 			case <-quit:
 				ticker.Stop()
@@ -128,7 +128,6 @@ func (g *gameImpl) processInput(message []byte) {
 	// Process different type of message received from client
 	switch msg.Message.(type) {
 	case *Message_proto.ClientGameMessage_MovePositionPayload:
-		fmt.Println("2", msg.GetMovePositionPayload().GetDx())
 		// Move player game logic
 		player, ok := g.objManager.GetPlayerByID(msg.GetMovePositionPayload().GetId())
 		if !ok {
@@ -206,6 +205,7 @@ func (g *gameImpl) newPlayerConnect(client ws.Client) {
 	go client.ReadPump()
 	time.Sleep(100)
 	clientID := client.GetID()
+	fmt.Println(10000, clientID)
 	// Send all current players info to new player
 	initAllMsg := g.createInitAllMessage(g.objManager.GetPlayers(), g.objManager.GetMap())
 	encodedMsg, _ := proto.Marshal(initAllMsg)
